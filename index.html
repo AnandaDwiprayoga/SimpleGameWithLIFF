@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">	
+	<title>Simple Game</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+	<style>	
+		canvas {
+			border: 1px solid #d3d3d3;
+   			background-color: #f1f1f1;
+   			margin-left: auto;
+    		margin-right: auto;
+    		display: block;
+    		width: 90%;
+    		margin-top: 3rem;
+    		background: url("background.jpg");
+    		background-size: cover;
+    		background-repeat: no-repeat;
+    		/*padding-left: /*0;*/
+    		/*padding-right: 0;*/
+		}
+		.hidden {
+		    display: none;
+		}
+	</style>
+</head>
+<body onload="startGame()">
+<script>	
+	var myGamePiece;
+	var myObstacle =[];
+	var myScore;
+	var grav;
+
+	function startGame(){
+		myGamePiece = new component(20,20,"pacman.png", 10,90, "image");
+		myScore = new component("20px", "Consolas", "white", myGameArea.canvas.width - 120, 20, "text");
+		myGameArea.start();
+	}
+
+	var myGameArea = {
+		canvas : document.createElement("canvas"),
+		start : function(){
+			// this.canvas.width = 480;
+			this.canvas.height = 200;
+			this.context = this.canvas.getContext("2d");
+			document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+			this.frameNo = 0;
+			this.interval = setInterval(updateGameArea, 20);
+		},
+		clear : function(){
+			this.context.clearRect(0,0,this.canvas.width, this.canvas.height);
+		},
+		stop : function(){
+			clearInterval(this.interval);
+			if (!liff.isInClient()) {
+		        sendAlertIfNotInClient();
+		    } else {
+		        liff.sendMessages([{
+		            'type': 'text',
+		            'text': "Yah anda menabrak tiang, tekan tombol restart untuk memulai lagi"
+		        }]).then(function() {
+		        	var str = "Skor anda " + myGameArea.frameNo;
+		            alert(str);
+		        }).catch(function(error) {
+		            alert('Aduh kok error ya...');
+		        });
+		    }
+		}
+	}
+
+	function component(width, height, color, x, y, type){
+		this.type = type;
+		 if (type == "image") {
+		    this.image = new Image();
+		    this.image.src = color;
+		  }
+		this.width 	= width;
+		this.height	= height;
+		this.x		= x;
+		this.y		= y;
+		this.gravity = 0.04;
+    	this.gravitySpeed = 0;
+		this.update = function(){
+			ctx 		= myGameArea.context;
+			if(this.type == "text"){
+				ctx.font = this.width + " " + this.height;	
+				ctx.fillStyle = color;
+            	ctx.fillText(this.text, this.x, this.y);
+			}else if(this.type == "image"){
+				ctx.drawImage(this.image,
+		        this.x,
+		        this.y,
+		        this.width, this.height);
+			}
+			else{
+				ctx.fillStyle= color;
+				ctx.fillRect(this.x, this.y, this.width, this.height);
+			}
+		}	
+		this.crashWith = function(otherobj) {
+	        var myleft = this.x;
+	        var myright = this.x + (this.width);
+	        var mytop = this.y;
+	        var mybottom = this.y + (this.height);
+	        var otherleft = otherobj.x;
+	        var otherright = otherobj.x + (otherobj.width);
+	        var othertop = otherobj.y;
+	        var otherbottom = otherobj.y + (otherobj.height);
+	        var crash = true;
+	        if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
+	            crash = false;
+	        }
+        	return crash;		
+    	}
+    	this.newPos = function(){
+    		this.gravitySpeed += this.gravity;
+    		grav= this.gravitySpeed;
+        	this.y += this.gravitySpeed;
+        	this.hitBottom();
+    	}
+    	this.hitBottom = function() {
+		    var rockbottom = myGameArea.canvas.height - this.height;
+		    if (this.y > rockbottom) {
+		      this.y = rockbottom;
+		    }
+		  }
+	}
+
+	function updateGameArea(){
+		var x, height, gap, minHeight,maxHeight;
+		for(i = 0; i < myObstacle.length; i+=1){
+			if(myGamePiece.crashWith(myObstacle[i])){
+				myGameArea.stop();
+				return;
+			}
+		}
+		myGameArea.clear();
+		myGameArea.frameNo +=1;
+		if(myGameArea.frameNo == 1 || everyInterval(150)){
+			x = myGameArea.canvas.width;
+			minHeight = 40;
+			maxHeight = 100;
+			height = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
+			mingap = 40;
+			maxgap = 100;
+			gap = Math.floor(Math.random()*(maxgap-mingap+1)+mingap);
+			myObstacle.push(new component(10,height,"brown", x, 0));
+			myObstacle.push(new component(10,x- height - gap,"brown", x, height+ gap));
+		}
+		for(i = 0; i < myObstacle.length;i += 1){
+			myObstacle[i].x += -1;
+			myObstacle[i].update();
+		}
+		myScore.text="SCORE: " + myGameArea.frameNo;
+    	myScore.update();
+    	myGamePiece.newPos();
+		myGamePiece.update();
+	}
+
+	myGameArea.canvas.onclick = function() {
+		myGamePiece.image.src ="pacmanEat.png";
+		myGamePiece.gravitySpeed -= 1;
+		myGamePiece.y -= 15;
+	};
+
+	function everyInterval(n){
+		if ((myGameArea.frameNo / n) % 1 == 0) {return true;}
+    	return false;
+	}
+
+</script>
+	<div class="container mt-3">
+		<div class="row">
+			<div class="col text-center">
+				<h3>Tap To Play</h3>
+			</div>
+		</div>
+		<div class="row mt-5">
+			<div class="col text-center">
+				<a href="" class="btn btn-primary btn-small">Restart</a>
+			</div>
+		</div>
+		<div class="row mt-2 justify-content-center" id="fitur">
+			<div class="buttonGroup">
+	            <div class="buttonRow">
+	                <button id="openWindowButton" class="btn btn-success btn-small">Open External Window</button>
+	                <button id="closeWindowButton" class="btn btn-danger btn-small">Close LIFF App</button>
+	            </div>
+	        </div>
+		</div>
+		<!-- LIFF INIT ERROR -->
+        <div id="liffInitErrorMessage" class="hidden">
+            <p>Something went wrong with LIFF initialization.</p>
+            <p>LIFF initialization can fail if a user clicks "Cancel" on the "Grant permission" screen, or if an error occurs in the process of <code>liff.init()</code>.
+        </div>
+	</div>	
+</body>
+<script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
+<script src="liff-starter.js"></script>
+</html>
+
