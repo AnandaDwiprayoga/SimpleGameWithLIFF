@@ -33,6 +33,7 @@
 	var grav;
 
 	function startGame(){
+		console.log('game');
 		myGamePiece = new component(20,20,"pacman.png", 10,90, "image");
 		myScore = new component("20px", "Consolas", "white", myGameArea.canvas.width - 120, 20, "text");
 		myGameArea.start();

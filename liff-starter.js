@@ -1,4 +1,6 @@
-	window.onload = function() {
+window.onload = function() {
+    console.log('masuk');
+    startGame();
     const useNodeJS = false;   // if you are not using a node server, set this value to false
     const defaultLiffId = "1653691994-AO9OB4mg";   // change the default LIFF value if you are not using a node server
  
@@ -32,9 +34,11 @@
 */
 function initializeLiffOrDie(myLiffId) {
     if (!myLiffId) {
+    	console.log("masuk sini");
         document.getElementById("fitur").classList.add('hidden');
         document.getElementById("liffIdErrorMessage").classList.remove('hidden');
     } else {
+    	 console.log('masuk si');
         initializeLiff(myLiffId);
     }
 }
@@ -53,7 +57,8 @@ function initializeLiff(myLiffId) {
             initializeApp();
         })
         .catch((err) => {
-            document.getElementById("liffAppContent").classList.add('hidden');
+        	console.log("error");
+            document.getElementById("fitur").classList.add('hidden');
             document.getElementById("liffInitErrorMessage").classList.remove('hidden');
         });
 }
@@ -81,21 +86,4 @@ function registerButtonHandlers() {
             liff.closeWindow();
         }
     });
-}
-
-function sendAlertIfNotInClient() {
-    alert('This button is unavailable as LIFF is currently being opened in an external browser.');
-}
- 
-/**
-* Toggle specified element
-* @param {string} elementId The ID of the selected element
-*/
-function toggleElement(elementId) {
-    const elem = document.getElementById(elementId);
-    if (elem.offsetWidth > 0 && elem.offsetHeight > 0) {
-        elem.style.display = 'none';
-    } else {
-        elem.style.display = 'block';
-    }
 }
